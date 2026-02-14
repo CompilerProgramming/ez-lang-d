@@ -4,14 +4,14 @@ import ezlang.lex;
 
 unittest {
     auto lexer = new Lexer("124");
-    auto token = lexer.parse_number();
+    auto token = lexer.parseNumber();
     assert(token._kind == TokenKind.NUM);
     assert(token._num == 124);
 }
 
 unittest {
     auto lexer = new Lexer("abc");
-    auto token = lexer.parse_identifier();
+    auto token = lexer.parseIdentifier();
     assert(token._kind == TokenKind.IDENT);
     assert(token._str == "abc");
 }
@@ -23,28 +23,28 @@ unittest {
         `;
     auto lexer = new Lexer(src);
     Token[] expected = [
-        Token.new_ident("Ident", 0),
-        Token.new_punct("=", 0),
-        Token.new_punct(",", 0),
-        Token.new_punct(">=", 0),
-        Token.new_punct("<", 0),
-        Token.new_punct(">", 0),
-        Token.new_punct(">=", 0),
-        Token.new_punct("!=", 0),
-        Token.new_punct("!", 0),
-        Token.new_num(155, "155", 0),
-        Token.new_punct("{", 0),
-        Token.new_num(0, "0", 0),
-        Token.new_punct("}", 0),
-        Token.new_num(11, "11", 0),
-        Token.new_punct("(", 0),
-        Token.new_punct(")", 0),
-        Token.new_punct("[", 0),
-        Token.new_punct("]", 0),
-        Token.new_punct("+", 0),
-        Token.new_punct("-", 0),
-        Token.new_punct("*", 0),
-        Token.new_punct("/", 0)
+        Token.newIdent("Ident", 0),
+        Token.newPunct("=", 0),
+        Token.newPunct(",", 0),
+        Token.newPunct(">=", 0),
+        Token.newPunct("<", 0),
+        Token.newPunct(">", 0),
+        Token.newPunct(">=", 0),
+        Token.newPunct("!=", 0),
+        Token.newPunct("!", 0),
+        Token.newNum(155, "155", 0),
+        Token.newPunct("{", 0),
+        Token.newNum(0, "0", 0),
+        Token.newPunct("}", 0),
+        Token.newNum(11, "11", 0),
+        Token.newPunct("(", 0),
+        Token.newPunct(")", 0),
+        Token.newPunct("[", 0),
+        Token.newPunct("]", 0),
+        Token.newPunct("+", 0),
+        Token.newPunct("-", 0),
+        Token.newPunct("*", 0),
+        Token.newPunct("/", 0)
     ];
     Token[] tokens = [];
     Token token = lexer.scan();

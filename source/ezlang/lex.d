@@ -13,22 +13,22 @@ class Token {
     TokenKind _kind;
     string _str;
     long _num;
-    int _line_number;
+    int _lineNumber;
 
-    this(TokenKind kind, string str, long num, int line_number) {
+    this(TokenKind kind, string str, long num, int lineNumber) {
         _kind = kind;
         _str = str;
         _num = num;
-        _line_number = line_number;
+        _lineNumber = lineNumber;
     }
-    static Token new_ident(string str, int line_number) {
-        return new Token(TokenKind.IDENT, str, 0, line_number);
+    static Token newIdent(string str, int lineNumber) {
+        return new Token(TokenKind.IDENT, str, 0, lineNumber);
     }
-    static Token new_num(long num, string str, int line_number) {
-        return new Token(TokenKind.NUM, str, num, line_number);
+    static Token newNum(long num, string str, int lineNumber) {
+        return new Token(TokenKind.NUM, str, num, lineNumber);
     }
-    static Token new_punct(string str, int line_number) {
-        return new Token(TokenKind.PUNCT, str, 0, line_number);
+    static Token newPunct(string str, int lineNumber) {
+        return new Token(TokenKind.PUNCT, str, 0, lineNumber);
     }
 
     static Token EOF;
@@ -46,15 +46,15 @@ class Lexer {
 
     string _input;
     int _position;
-    int _line_number;
+    int _lineNumber;
 
     this(string input) {
         _input = input;
         _position = 0;
-        _line_number = 0;
+        _lineNumber = 0;
     }
 
-    Token parse_number() {
+    Token parseNumber() {
         long value = (_input[_position] - '0');
         int start_position = _position++;
         while (_position < _input.length && _input[_position] >= '0' && _input[_position] <= '9') {
@@ -62,25 +62,25 @@ class Lexer {
             _position++;
         }
         auto number_text = _input[start_position .. _position];
-        return Token.new_num(value, number_text, _line_number);
+        return Token.newNum(value, number_text, _lineNumber);
     }
 
-    bool is_identifier_start(char c) {
+    bool isIdentifierStart(char c) {
         return isAlpha(c) || c == '_';
     }
 
-    bool is_identifier_letter(char c) {
+    bool isIdentifierLetter(char c) {
         return isAlpha(c) || isDigit(c) || c == '_';
     }
 
-    Token parse_identifier() {
+    Token parseIdentifier() {
         int start_position = _position++;
-        while (_position < _input.length && is_identifier_letter(_input[_position]))
+        while (_position < _input.length && isIdentifierLetter(_input[_position]))
             _position++;
-        return Token.new_ident(_input[start_position .. _position], _line_number);
+        return Token.newIdent(_input[start_position .. _position], _lineNumber);
     }
 
-    char peek_char() {
+    char peekChar() {
         int pos = _position;
         char ch = 0;
         while (pos < _input.length && isWhite(_input[pos]))
@@ -103,63 +103,63 @@ class Lexer {
                 case '\r':
                     _position++;
                     if (_position < _input.length && _input[_position] == '\n') {
-                        _line_number++;
+                        _lineNumber++;
                         _position++;
                     }
                     continue;
                 case '\n':
-                    _line_number++;
+                    _lineNumber++;
                     _position++;
                     continue;
                 case '&':
                     _position++;
                     if (_position < _input.length && _input[_position] == '&') {
                         _position++;
-                        return Token.new_punct("&&", _line_number);
+                        return Token.newPunct("&&", _lineNumber);
                     }
-                    return Token.new_punct("&", _line_number);
+                    return Token.newPunct("&", _lineNumber);
                 case '|':
                     _position++;
                     if (_position < _input.length && _input[_position] == '|') {
                         _position++;
-                        return Token.new_punct("||", _line_number);
+                        return Token.newPunct("||", _lineNumber);
                     }
-                    return Token.new_punct("|", _line_number);
+                    return Token.newPunct("|", _lineNumber);
                 case '=':
                     _position++;
                     if (_position < _input.length && _input[_position] == '=') {
                         _position++;
-                        return Token.new_punct("==", _line_number);
+                        return Token.newPunct("==", _lineNumber);
                     }
-                    return Token.new_punct("=", _line_number);
+                    return Token.newPunct("=", _lineNumber);
                 case '<':
                     _position++;
                     if (_position < _input.length && _input[_position] == '=') {
                         _position++;
-                        return Token.new_punct("<=", _line_number);
+                        return Token.newPunct("<=", _lineNumber);
                     }
-                    return Token.new_punct("<", _line_number);
+                    return Token.newPunct("<", _lineNumber);
                 case '>':
                     _position++;
                     if (_position < _input.length && _input[_position] == '=') {
                         _position++;
-                        return Token.new_punct(">=", _line_number);
+                        return Token.newPunct(">=", _lineNumber);
                     }
-                    return Token.new_punct(">", _line_number);
+                    return Token.newPunct(">", _lineNumber);
                 case '!':
                     _position++;
                     if (_position < _input.length && _input[_position] == '=') {
                         _position++;
-                        return Token.new_punct("!=", _line_number);
+                        return Token.newPunct("!=", _lineNumber);
                     }
-                    return Token.new_punct("!", _line_number);
+                    return Token.newPunct("!", _lineNumber);
                 case '-':
                     _position++;
                     if (_position < _input.length && _input[_position] == '>') {
                         _position++;
-                        return Token.new_punct("->", _line_number);
+                        return Token.newPunct("->", _lineNumber);
                     }
-                    return Token.new_punct("-", _line_number);
+                    return Token.newPunct("-", _lineNumber);
                 case '{':
                 case '}':
                 case '[':
@@ -174,7 +174,7 @@ class Lexer {
                 case ';':
                 case ':':
                 case '?': {
-                    return Token.new_punct([_input[_position++]], _line_number);
+                    return Token.newPunct([_input[_position++]], _lineNumber);
                 }
                 case '/':
                     _position++;
@@ -184,19 +184,19 @@ class Lexer {
                             _position++;
                         continue;
                     }
-                    return Token.new_punct("/", _line_number);
+                    return Token.newPunct("/", _lineNumber);
                 default: {
-                    return scan_others();
+                    return scanOthers();
                 }
             }
         }
     }
 
-    Token scan_others() {
-        if (isDigit(_input[_position])) return parse_number();
-        else if (is_identifier_start(_input[_position])) return parse_identifier();
-        throw new CompilerException("Unexpected character " ~ _input[_position], _line_number);
+    Token scanOthers() {
+        if (isDigit(_input[_position])) return parseNumber();
+        else if (isIdentifierStart(_input[_position])) return parseIdentifier();
+        throw new CompilerException("Unexpected character " ~ _input[_position], _lineNumber);
     }
 
-    int line_Number() {return _line_number;}
+    int lineNumber() {return _lineNumber;}
 }
