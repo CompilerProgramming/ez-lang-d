@@ -114,7 +114,7 @@ class FuncDecl : Decl {
     this(string name, VarDecl[] args, TypeExpr returnType, BlockStmt block) {
         _name = name;
         _args = args;
-        _returnType = null; // FIXME new ReturnTypeExpr(returnType);
+        _returnType = new ReturnTypeExpr(returnType);
         _block = block;
     }
     override void toStr(ref Appender!string sb) const {
