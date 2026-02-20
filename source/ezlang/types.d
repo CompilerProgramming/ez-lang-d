@@ -2,8 +2,11 @@ module ezlang.types;
 
 import std.array : appender;
 import std.format : format;
+import std.stdio;
+
 import ezlang.errors;
 import ezlang.symtab;
+import ezlang.scopes;
 
 // Translated from Java version with help from ChatGPT
 
@@ -54,15 +57,20 @@ abstract class EZType {
     override string toString() const { return _name; }
     string name() const { return _name; }
 
+    /**
+     * Can we assign a value of other type to a var of this type?
+     */
     bool isAssignable(const EZType other) const {
-        if (other is null || cast(EZTypeVoid)other !is null || cast(EZTypeUnknown)other !is null)
+        if (other is null || cast(EZTypeVoid)other || cast(EZTypeUnknown)other)
             return false;
 
         if (this is other || this == other) return true;
 
         if (auto nullable = cast(EZTypeNullable)this) {
-            if (cast(EZTypeNull)other !is null)
+            // if this is Nullable and other is null then okay
+            if (cast(EZTypeNull)other)
                 return true;
+            // if this is Nullable and other is compatible with base type then okay
             return nullable._base_type.isAssignable(other);
         } else if (auto otherNullable = cast(EZTypeNullable)other) {
             // At compile time we allow nullable value to be
@@ -207,5 +215,63 @@ class EZTypeFunction : EZType {
         }
 
         return sb.data;
+    }
+}
+
+final class TypeDictionary : Scope {
+    EZTypeUnknown UNKNOWN;
+    EZTypeInteger INT;
+    EZTypeNull NULL;
+    EZTypeVoid VOID;
+
+    this() {
+        super(null);
+        INT = cast(EZTypeInteger) intern(new EZTypeInteger());
+        UNKNOWN = cast(EZTypeUnknown) intern(new EZTypeUnknown());
+        NULL = cast(EZTypeNull) intern(new EZTypeNull());
+        VOID = cast(EZTypeVoid) intern(new EZTypeVoid());
+    }
+    EZType makeArrayType(EZType elementType, bool isNullable) {
+        if (auto ti = cast(EZTypeInteger)elementType) {
+            auto arrayType = intern(new EZTypeArray(ti));
+            return isNullable ? intern(new EZTypeNullable(arrayType)) : arrayType;
+        }
+        else if (auto ts = cast(EZTypeStruct)elementType) {
+            auto arrayType = intern(new EZTypeArray(ts));
+            return isNullable ? intern(new EZTypeNullable(arrayType)) : arrayType;
+        }
+        else if (auto nullable = cast(EZTypeNullable)elementType) {
+            if (cast(EZTypeStruct) nullable._base_type) {
+                auto arrayType = intern(new EZTypeArray(elementType));
+                return isNullable ? intern(new EZTypeNullable(arrayType)) : arrayType;
+            }
+        }
+        throw new CompilerException("Unsupported array element type: " ~ elementType.name(), -1);
+    }
+    EZType intern(EZType type) {
+        Symbol symbol = lookup(type.name());
+        if (symbol !is null) return symbol._type;
+        return install(type.name(), new TypeSymbol(type.name(), type))._type;
+    }
+    EZType merge(EZType t1, EZType t2) {
+        if (cast(EZTypeNull)t1 && cast(EZTypeStruct)t2) {
+            return intern(new EZTypeNullable(t2));
+        }
+        else if (cast(EZTypeNull)t2 && cast(EZTypeStruct)t1) {
+            return intern(new EZTypeNullable(t1));
+        }
+        else if (cast(EZTypeArray)t1 && cast(EZTypeNull)t2) {
+            return intern(new EZTypeNullable(t1));
+        }
+        else if (cast(EZTypeArray)t2 && cast(EZTypeNull)t1) {
+            return intern(new EZTypeNullable(t2));
+        }
+        else if (cast(EZTypeUnknown)t1)
+            return t2;
+        else if (cast(EZTypeUnknown)t2)
+            return t1;
+        else if (!t1.opEquals(t2))
+            throw new CompilerException("Unsupported merge type: " ~ t1.name() ~ " and " ~ t2.name(), -1);
+        return t1;
     }
 }
